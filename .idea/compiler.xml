@@ -9,8 +9,11 @@
         <module name="grpcServer" />
         <module name="Proto" />
         <module name="ClientApp" />
-        <module name="CN2026Labels" />
+        <module name="LabelsTranslateCN2026" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="CN2026Labels" target="25" />
+    </bytecodeTargetLevel>
   </component>
 </project>

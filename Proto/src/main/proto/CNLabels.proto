@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "isel.computacaonanuvem";
+
+import "google/protobuf/timestamp.proto";
+
+service SFService {
+  // Upload em stream de blocos para o Cloud Storage
+  rpc uploadImage(stream ImageBlock) returns (ImageId);
+
+  // Obter labels e traduções por ID
+  rpc getLabels(ImageId) returns (ImageResult);
+
+  // Obter nomes de ficheiros por característica e intervalo de datas
+  rpc searchImages(SearchRequest) returns (FileList);
+}
+
+service SGService {
+  rpc scaleServers(ScaleRequest) returns (ScaleResponse);
+  rpc scaleWorkers(ScaleRequest) returns (ScaleResponse);
+}
+
+// Mensagens SF
+message ImageBlock {
+  bytes data = 1;
+  string filename = 2;
+}
+
+message ImageId {
+  string id = 1;
+}
+
+message ImageResult {
+  string id = 1;
+  google.protobuf.Timestamp processedDate = 2;
+  repeated LabelDetail labels = 3;
+}
+
+message LabelDetail {
+  string englishLabel = 1;
+  string portugueseLabel = 2;
+  float confidence = 3;
+}
+
+message SearchRequest {
+  string labels = 1;
+  google.protobuf.Timestamp startDate = 2;
+  google.protobuf.Timestamp endDate = 3;
+}
+
+message FileList {
+  repeated string fileNames = 1;
+}
+
+// Mensagens SG
+message ScaleRequest {
+  int32 targetInstances = 1;
+}
+
+message ScaleResponse {
+  string statusMessage = 1;
+}

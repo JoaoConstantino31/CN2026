@@ -16,7 +16,8 @@ public class LabelsWorkerApp {
         String subscriptionId = config("LABELS_SUBSCRIPTION", args.length > 1 ? args[1] : "image-processing-topic-sub");
 
         System.out.println("--- DIAGNÓSTICO ---");
-        System.out.println("Projeto: " + System.getenv("GCP_PROJECT_ID"));
+        System.out.println("Projeto: " + projectId);
+        System.out.println("Subscricao Resolvida: " + subscriptionId);
         System.out.println("Credenciais: " + System.getenv("GOOGLE_APPLICATION_CREDENTIALS"));
         System.out.println("-------------------");
 
@@ -41,11 +42,17 @@ public class LabelsWorkerApp {
 
     private static void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
         String messageText = message.getData().toStringUtf8();
+        long startTime = System.currentTimeMillis();
+        System.out.println("\n[Nova Mensagem] A iniciar processamento...");
+
         try {
             MessageProcessor.process(messageText);
             consumer.ack();
             System.out.println("Processado pedido: " + messageText);
+            long duration = System.currentTimeMillis() - startTime;
+            System.out.println("[Sucesso] Processado pedido em " + duration + "ms: " + messageText);
         } catch (Exception e) {
+            System.err.println("[Erro] Falha ao processar mensagem. A enviar nack...");
             e.printStackTrace();
             consumer.nack();
         }

@@ -31,31 +31,12 @@ public class MessageProcessor {
             throw new IllegalStateException("Imagem nao encontrada no Storage: " + bucketName + "/" + blobName);
         }
 
-        // 1. Obtemos todas as caraterísticas da Vision API de uma só vez
-        List<EntityAnnotation> annotations = VisionOperations.detectLabels(imageBytes);
-
-        // 2. Criamos uma lista temporária apenas com os textos em Inglês
-        List<String> englishTexts = new ArrayList<>();
-        for (EntityAnnotation annotation : annotations) {
-            englishTexts.add(annotation.getDescription());
-        }
-
-        // 3. Enviamos TODAS as palavras para tradução numa ÚNICA chamada ao Google Translate
-        List<String> portugueseTexts = new ArrayList<>();
-        if (!englishTexts.isEmpty()) {
-            portugueseTexts = TranslateOperations.translateListToPT(englishTexts);
-        }
-
-        // 4. Agora estruturamos os dados combinando o Inglês com o Português pelo índice (i)
         List<Map<String, Object>> labels = new ArrayList<>();
         List<String> labelsList = new ArrayList<>();
 
-        for (int i = 0; i < annotations.size(); i++) {
-            EntityAnnotation annotation = annotations.get(i);
+        for (EntityAnnotation annotation : VisionOperations.detectLabels(imageBytes)) {
             String englishLabel = annotation.getDescription();
-
-            // Vai buscar a tradução correspondente à mesma posição do índice
-            String portugueseLabel = (i < portugueseTexts.size()) ? portugueseTexts.get(i) : englishLabel;
+            String portugueseLabel = TranslateOperations.translateToPT(englishLabel);
 
             Map<String, Object> label = new HashMap<>();
             label.put("englishLabel", englishLabel);
@@ -76,7 +57,6 @@ public class MessageProcessor {
         data.put("labels", labels);
         data.put("labelsList", labelsList);
 
-        // 5. Guarda o mapa final no Firestore
         FirestoreOperations.storeResult(requestId, data);
     }
 

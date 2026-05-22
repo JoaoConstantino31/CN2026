@@ -16,8 +16,8 @@ public class SGServiceImpl extends SGServiceGrpc.SGServiceImplBase {
 
     private final String projectId = config("GCP_PROJECT_ID", "cn2526-t3-g01");
     private final String zone = config("GCP_ZONE", "europe-west6-a");
-    private final String serverGroup = config("SERVER_INSTANCE_GROUP", "lab-mig");
-    private final String workerGroup = config("WORKER_INSTANCE_GROUP", "worker-mig");
+    private final String serverGroup = config("SERVER_INSTANCE_GROUP", "grcp-server-mig");
+    private final String workerGroup = config("WORKER_INSTANCE_GROUP", "labels-worker-mig");
 
     @Override
     public void scaleServers(ScaleRequest scaleRequest, StreamObserver<ScaleResponse> responseObserver) {

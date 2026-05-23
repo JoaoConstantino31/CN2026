@@ -78,7 +78,7 @@ public class ClientApp {
             System.out.println("-> Servidor Escolhido: " + svcIP + ":" + svcPort);
 
         } catch (Exception e) {
-            System.err.println("\nFalha catastrófica ao comunicar com o serviço de IP Lookup: " + e.getMessage());
+            System.err.println("\nFalha ao comunicar com o serviço de IP Lookup: " + e.getMessage());
             System.err.println("Impossível continuar sem obter a lista de servidores.");
             return;
         }

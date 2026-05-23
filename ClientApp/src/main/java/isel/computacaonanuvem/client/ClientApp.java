@@ -74,7 +74,7 @@ public class ClientApp {
 
             // Define o IP com base na escolha numérica do utilizador
             svcIP = ips.get(option - 1);
-            System.out.println("\nLink estabelecido com sucesso para a infraestrutura!");
+            System.out.println("\nLink estabelecido com sucesso!");
             System.out.println("-> Servidor Escolhido: " + svcIP + ":" + svcPort);
 
         } catch (Exception e) {

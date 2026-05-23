@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -31,8 +32,56 @@ public class ClientApp {
     private static final int BLOCK_SIZE = 64 * 1024;
 
     public static void main(String[] args) throws Exception {
-        String svcIP = args.length > 0 ? args[0] : "34.65.150.112";
         int svcPort = args.length > 1 ? Integer.parseInt(args[1]) : 7500;
+        String svcIP = null;
+
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("=========================================================");
+        System.out.println(" INICIALIZAÇÃO: Processo de obtenção dinâmica de IPs gRPC");
+        System.out.println("=========================================================");
+
+        try {
+            // Invoca o Cloud Run passando os identificadores do teu laboratório
+            List<String> ips = IpLookup.getExternalIps("cn2526-t3-g01", "europe-west6-a", "grcp-server-mig");
+
+            if (ips.isEmpty()) {
+                System.err.println("\nERRO CRÍTICO: Nenhum servidor gRPC está ativo de momento no grupo 'grcp-server-mig'!");
+                System.err.println("Garante que escalaste o grupo para tamanho >= 1 na Cloud Shell antes de correr o cliente.");
+                System.out.println("Premir ENTER para sair...");
+                sc.nextLine();
+                return; // Aborta a aplicação pois não existem servidores para escolher
+            }
+
+            // Mostra o menu de servidores encontrados dinamicamente para o utilizador escolher
+            System.out.println("\nServidores gRPC ativos detetados na Google Cloud:");
+            for (int i = 0; i < ips.size(); i++) {
+                System.out.println("  [" + (i + 1) + "] -> Endereço IP: " + ips.get(i));
+            }
+
+            int option = 0;
+            while (option < 1 || option > ips.size()) {
+                System.out.print("\nSelecione o número do servidor gRPC ao qual se pretende ligar: ");
+                try {
+                    option = Integer.parseInt(sc.nextLine().trim());
+                    if (option < 1 || option > ips.size()) {
+                        System.out.println("Opção inválida. Escolha um número entre 1 e " + ips.size());
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Por favor, introduza um número válido.");
+                }
+            }
+
+            // Define o IP com base na escolha numérica do utilizador
+            svcIP = ips.get(option - 1);
+            System.out.println("\nLink estabelecido com sucesso para a infraestrutura!");
+            System.out.println("-> Servidor Escolhido: " + svcIP + ":" + svcPort);
+
+        } catch (Exception e) {
+            System.err.println("\nFalha catastrófica ao comunicar com o serviço de IP Lookup: " + e.getMessage());
+            System.err.println("Impossível continuar sem obter a lista de servidores.");
+            return;
+        }
 
         ManagedChannel channel = ManagedChannelBuilder.forAddress(svcIP, svcPort)
                 .usePlaintext()
@@ -42,8 +91,7 @@ public class ClientApp {
         SFServiceGrpc.SFServiceStub sfAsyncStub = SFServiceGrpc.newStub(channel);
         SGServiceGrpc.SGServiceBlockingStub sgBlockingStub = SGServiceGrpc.newBlockingStub(channel);
 
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Introduza o seu nome de utilizador:");
+        System.out.println("\nIntroduza o seu nome de utilizador:");
         String username = sc.nextLine();
 
         try {

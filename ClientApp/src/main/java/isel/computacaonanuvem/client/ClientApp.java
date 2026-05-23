@@ -44,7 +44,7 @@ public class ClientApp {
         try {
             // Invoca o Cloud Run passando os identificadores do teu laboratório
             List<String> ips = IpLookup.getExternalIps("cn2526-t3-g01", "europe-west6-a", "grcp-server-mig");
-
+            // ips.add("127.0.0.1"); //Teste localhost
             if (ips.isEmpty()) {
                 System.err.println("\nERRO CRÍTICO: Nenhum servidor gRPC está ativo de momento no grupo 'grcp-server-mig'!");
                 System.err.println("Garante que escalaste o grupo para tamanho >= 1 na Cloud Shell antes de correr o cliente.");

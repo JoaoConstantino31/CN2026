@@ -31,7 +31,7 @@ public class ClientApp {
     private static final int BLOCK_SIZE = 64 * 1024;
 
     public static void main(String[] args) throws Exception {
-        String svcIP = args.length > 0 ? args[0] : "localhost";
+        String svcIP = args.length > 0 ? args[0] : "34.65.150.112";
         int svcPort = args.length > 1 ? Integer.parseInt(args[1]) : 7500;
 
         ManagedChannel channel = ManagedChannelBuilder.forAddress(svcIP, svcPort)

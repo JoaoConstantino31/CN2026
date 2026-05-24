@@ -41,52 +41,93 @@ public class ClientApp {
         System.out.println(" INICIALIZAÇÃO: Processo de obtenção dinâmica de IPs gRPC");
         System.out.println("=========================================================");
 
-        try {
-            // Invoca o Cloud Run passando os identificadores do teu laboratório
-            List<String> ips = IpLookup.getExternalIps("cn2526-t3-g01", "europe-west6-a", "grcp-server-mig");
-            // ips.add("127.0.0.1"); //Teste localhost
-            if (ips.isEmpty()) {
-                System.err.println("\nERRO CRÍTICO: Nenhum servidor gRPC está ativo de momento no grupo 'grcp-server-mig'!");
-                System.err.println("Garante que escalaste o grupo para tamanho >= 1 na Cloud Shell antes de correr o cliente.");
-                System.out.println("Premir ENTER para sair...");
-                sc.nextLine();
-                return; // Aborta a aplicação pois não existem servidores para escolher
-            }
+        ManagedChannel channel = null;
+        boolean connected = false;
 
-            // Mostra o menu de servidores encontrados dinamicamente para o utilizador escolher
-            System.out.println("\nServidores gRPC ativos detetados na Google Cloud:");
-            for (int i = 0; i < ips.size(); i++) {
-                System.out.println("  [" + (i + 1) + "] -> Endereço IP: " + ips.get(i));
-            }
-
-            int option = 0;
-            while (option < 1 || option > ips.size()) {
-                System.out.print("\nSelecione o número do servidor gRPC ao qual se pretende ligar: ");
-                try {
-                    option = Integer.parseInt(sc.nextLine().trim());
-                    if (option < 1 || option > ips.size()) {
-                        System.out.println("Opção inválida. Escolha um número entre 1 e " + ips.size());
+        // Repete até conseguir uma ligação e esteja funcional com uma VM
+        while (!connected) {
+            try {
+                // 1. Invoca o Cloud Run passando os identificadores do teu laboratório
+                List<String> ips = IpLookup.getExternalIps("cn2526-t3-g01", "europe-west6-a", "grcp-server-mig");
+                // ips.add("127.0.0.1"); // Para teste local
+                if (ips.isEmpty()) {
+                    System.err.println("\nERRO CRÍTICO: Nenhum servidor gRPC está ativo de momento no grupo 'grcp-server-mig'!");
+                    System.err.println("Garante que escalaste o grupo para tamanho >= 1 na Cloud Shell antes de correr o cliente.");
+                    System.out.println("Premir ENTER para repetir o lookup ou introduza 'sair' ...");
+                    String res = sc.nextLine().trim();
+                    if (res.equalsIgnoreCase("sair")) {
+                        return; // Aborta o programa
                     }
-                } catch (NumberFormatException e) {
-                    System.out.println("Por favor, introduza um número válido.");
+                    continue; // Volta ao topo do loop para repetir o lookup
                 }
+
+                // Mostra o menu de servidores encontrados dinamicamente
+                System.out.println("\nServidores gRPC ativos detetados na Google Cloud:");
+                for (int i = 0; i < ips.size(); i++) {
+                    System.out.println("  [" + (i + 1) + "] -> Endereço IP: " + ips.get(i));
+                }
+                System.out.println("  [" + (ips.size() + 1) + "] -> Atualizar Lista");
+
+                int option = 0;
+                // Valida a escolha numérica do utilizador
+                while (option < 1 || option > ips.size() + 1) {
+                    System.out.print("\nSelecione o número do servidor gRPC ou atualize a lista: ");
+                    try {
+                        option = Integer.parseInt(sc.nextLine().trim());
+                        if (option < 1 || option > ips.size() + 1) {
+                            System.out.println("Opção inválida. Escolha um número entre 1 e " + (ips.size() + 1));
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Por favor, introduza um número válido.");
+                    }
+                }
+
+                // Se o utilizador escolheu "Atualizar Lista", fazemos skip e voltamos ao topo do loop
+                if (option == ips.size() + 1) {
+                    System.out.println("A atualizar a lista...");
+                    continue;
+                }
+
+                // Define o IP com base na escolha numérica do utilizador
+                svcIP = ips.get(option - 1);
+                System.out.println("\nA tentar estabelecer ligação de rede com: " + svcIP + ":" + svcPort + " ...");
+
+                // Criação do Objeto de Canal gRPC (Lazy)
+                channel = ManagedChannelBuilder.forAddress(svcIP, svcPort)
+                        .usePlaintext()
+                        .build();
+
+                // FORÇAR A LIGAÇÃO FÍSICA IMEDIATA (Para cumprir o enunciado!)
+                channel.getState(true); // Diz ao gRPC para ligar o Socket na rede já
+
+                boolean isReady = false;
+                long timeout = System.currentTimeMillis() + 4000; // Espera no máximo 4 segundos
+
+                while (System.currentTimeMillis() < timeout) {
+                    if (channel.getState(false) == io.grpc.ConnectivityState.READY) {
+                        isReady = true;
+                        break;
+                    }
+                    Thread.sleep(200); // Verifica a cada 200ms
+                }
+
+                if (isReady) {
+                    System.out.println("Link estabelecido com sucesso");
+                    connected = true; // Força a saída do loop
+                } else {
+                    System.err.println("\n FALHA: O servidor no IP " + svcIP + " não respondeu!");
+                    System.err.println("A máquina pode ter sido interrompida. Vamos recomeçar o processo.");
+                    channel.shutdownNow(); // Desliga o canal morto
+                }
+
+            } catch (Exception e) {
+                System.err.println("\nFalha ao comunicar com o serviço de IP Lookup: " + e.getMessage());
+                System.out.println("Premir [ENTER] para tentar novamente...");
+                sc.nextLine();
             }
-
-            // Define o IP com base na escolha numérica do utilizador
-            svcIP = ips.get(option - 1);
-            System.out.println("\nLink estabelecido com sucesso!");
-            System.out.println("-> Servidor Escolhido: " + svcIP + ":" + svcPort);
-
-        } catch (Exception e) {
-            System.err.println("\nFalha ao comunicar com o serviço de IP Lookup: " + e.getMessage());
-            System.err.println("Impossível continuar sem obter a lista de servidores.");
-            return;
         }
 
-        ManagedChannel channel = ManagedChannelBuilder.forAddress(svcIP, svcPort)
-                .usePlaintext()
-                .build();
-
+        // Inicialização dos Stubs
         SFServiceGrpc.SFServiceBlockingStub sfBlockingStub = SFServiceGrpc.newBlockingStub(channel);
         SFServiceGrpc.SFServiceStub sfAsyncStub = SFServiceGrpc.newStub(channel);
         SGServiceGrpc.SGServiceBlockingStub sgBlockingStub = SGServiceGrpc.newBlockingStub(channel);

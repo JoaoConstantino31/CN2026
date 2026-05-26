@@ -8,7 +8,7 @@ public class StorageOperations {
 
     /**
      * Faz o upload de um array de bytes para o Cloud Storage.
-     * Usado pelo Servidor gRPC no método submitImage.
+     * Usado pelo Servidor gRPC no metodo submitImage.
      */
     public static void uploadBlob(String bucketName, String blobName, byte[] content) {
         uploadBlob(bucketName, blobName, content, "application/octet-stream");
@@ -37,16 +37,8 @@ public class StorageOperations {
             return null;
         }
 
-        // Lê todo o conteúdo para memória (usado para passar à Vision API)
+        // Lê o conteúdo para memória (usado para passar à Vision API)
         return blob.getContent();
     }
 
-    /**
-     * Torna um blob público (opcional, dependendo dos teus requisitos).
-     */
-    public static void makeBlobPublic(String bucketName, String blobName) {
-        BlobId blobId = BlobId.of(bucketName, blobName);
-        // Adiciona ACL para todos os utilizadores poderem ler
-        storage.createAcl(blobId, Acl.of(Acl.User.ofAllUsers(), Acl.Role.READER));
-    }
 }

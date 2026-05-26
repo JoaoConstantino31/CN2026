@@ -12,7 +12,7 @@ public class PubSubOperations {
         try {
             ByteString data = ByteString.copyFromUtf8(messageText);
             PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).build();
-            // Publica e aguarda a confirmação (como no teu Lab 5)
+            // Publica e aguarda a confirmação
             publisher.publish(pubsubMessage).get();
         } finally {
             publisher.shutdown();

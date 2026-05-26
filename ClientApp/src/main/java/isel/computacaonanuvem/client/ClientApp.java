@@ -47,9 +47,9 @@ public class ClientApp {
         // Repete até conseguir uma ligação e esteja funcional com uma VM
         while (!connected) {
             try {
-                // 1. Invoca o Cloud Run passando os identificadores do teu laboratório
+                // Invoca o Cloud Run passando os identificadores
                 List<String> ips = IpLookup.getExternalIps("cn2526-t3-g01", "europe-west6-a", "grcp-server-mig");
-                // ips.add("127.0.0.1"); // Para teste local
+                //ips.add("127.0.0.1"); // Para teste local
                 if (ips.isEmpty()) {
                     System.err.println("\nERRO CRÍTICO: Nenhum servidor gRPC está ativo de momento no grupo 'grcp-server-mig'!");
                     System.err.println("Garante que escalaste o grupo para tamanho >= 1 na Cloud Shell antes de correr o cliente.");
@@ -82,7 +82,7 @@ public class ClientApp {
                     }
                 }
 
-                // Se o utilizador escolheu "Atualizar Lista", fazemos skip e voltamos ao topo do loop
+                // Se escolheu "Atualizar Lista", fazemos skip e voltamos ao topo do loop
                 if (option == ips.size() + 1) {
                     System.out.println("A atualizar a lista...");
                     continue;
@@ -97,7 +97,7 @@ public class ClientApp {
                         .usePlaintext()
                         .build();
 
-                // FORÇAR A LIGAÇÃO FÍSICA IMEDIATA (Para cumprir o enunciado!)
+                // FORÇAR A LIGAÇÃO FÍSICA IMEDIATA
                 channel.getState(true); // Diz ao gRPC para ligar o Socket na rede já
 
                 boolean isReady = false;
@@ -115,7 +115,7 @@ public class ClientApp {
                     System.out.println("Link estabelecido com sucesso");
                     connected = true; // Força a saída do loop
                 } else {
-                    System.err.println("\n FALHA: O servidor no IP " + svcIP + " não respondeu!");
+                    System.err.println("\nFALHA: O servidor no IP " + svcIP + " não respondeu!");
                     System.err.println("A máquina pode ter sido interrompida. Vamos recomeçar o processo.");
                     channel.shutdownNow(); // Desliga o canal morto
                 }

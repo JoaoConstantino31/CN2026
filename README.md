@@ -1,101 +1,146 @@
->Este ficheiro README tem por objetivo documentar informações sobre configurações e funções de pastas/ficheiros , pressupostos de execução e testes, para uma melhor compreensão e accesibilidade do utilizador
+>Este ficheiro README tem por objetivo documentar informações sobre configurações e funções de pastas/ficheiros , pressupostos de execução e testes.
 
-# Estrutura do Projeto
+# CN2026Labels
 
-## server/
+Sistema para deteção e tradução de labels em imagens utilizando Google Cloud Platform (GCP).
 
-Responsável pela execução do servidor gRPC e exposição dos serviços.
-
-- **GrpcServer**  
-  Inicializa e arranca o servidor.
-
-- **SFServiceImpl**  
-  Implementa operações principais:
-  - Upload de imagens  
-  - Obtenção de labels  
-  - Pesquisa
-
-- **SGServiceImpl**  
-  Responsável por lógica de escalabilidade.
+> Trabalho Final de Computação na Nuvem (ISEL, 2025/2026)
 
 ---
 
-## client/
+## Descrição
 
-Contém os clientes responsáveis por interagir com o servidor.
+O CN2026Labels processa imagens de forma distribuída e assíncrona, permitindo:
 
-Funções:
-- Envio de imagens
-- Pedido de resultados ao sistema
-
----
-
-## storage/
-
-Integração com sistema de armazenamento (Cloud Storage).
-
-Funções:
-- Upload de imagens
-- Download de imagens
+- Deteção automática de labels em imagens
+- Tradução de labels (EN → PT)
+- Escalabilidade (workers + servidores)
+- Processamento baseado em eventos (Pub/Sub)
+- Comunicação via gRPC
 
 ---
 
-## pubsub/
+## Arquitetura
 
-Responsável pela comunicação assíncrona entre componentes.
+Fluxo simplificado:
 
-- **Publisher**  
-  Envia mensagens para o sistema.
-
-- **Subscriber**  
-  Recebe mensagens e ativa o processamento (workers).
-
----
-
-## firestore/
-
-Base de dados do sistema.
-
-Funções:
-- Armazenamento de resultados
-- Execução de queries (por label, data, etc.)
+1. Cliente envia imagem (gRPC)
+2. Imagem é armazenada em Cloud Storage
+3. Mensagem publicada em Pub/Sub
+4. Worker processa imagem (Vision API)
+5. Labels são traduzidos (Translation API)
+6. Resultados guardados em Firestore
+7. Cliente consulta resultados (gRPC)
 
 ---
 
-## vision/
+```text
+CN2026/
+├── ClientApp/                 # Cliente gRPC
+├── grpcServer/                # Servidor principal
+├── LabelsTranslateCN2026/     # Serviço de tradução
+├── Proto/                     # Definições gRPC
+└── README.md
+```
+---
 
-Integração com a API de visão computacional.
+## Componentes
 
-Função:
-- Deteção de labels em imagens (Google Vision API)
+### grpcServer
+
+Expõe dois serviços:
+
+#### Funcional (SF)
+
+| Método | Descrição |
+|--------|----------|
+| uploadImage | Envia imagem |
+| getLabels | Obtém labels |
+| searchImages | Pesquisa por label/data |
+
+#### Gestão (SG)
+
+| Método | Descrição |
+|--------|----------|
+| scaleWorkers | Aumenta/Diminui workers |
+| scaleServers | Diminui/Diminui servers |
 
 ---
 
-## translate/
+### ClientApp
 
-Responsável pela tradução de labels.
-
-Função:
-- Tradução de inglês para português
-
----
-
-## worker/
-
-Camada de processamento assíncrono.
-
-Fluxo:
-1. Consome mensagens do Pub/Sub  
-2. Processa imagens  
-3. Invoca serviços de Vision e Translate  
-4. Guarda resultados no Firestore  
+- Descobre servidores via Lookup Function
+- Envia imagens
+- Consulta resultados
+- Pesquisa imagens
 
 ---
 
-## model/
+### LabelsTranslateCN2026
+- Tradução de labels (EN → PT)
+- Integra Google Translation API
+---
 
-Define as estruturas de dados internas do sistema.
+### Cloud Functions
 
-Notas:
-- Não exposto via gRPC  
-- Utilizado para representação e manipulação interna de informação
+**Lookup Function (HTTP)**
+- Retorna IPs dos servidores gRPC
+- Baseado em Instance Groups
+
+**Logging Function (opcional)**
+- Registo de pedidos no Firestore
+
+---
+
+## Requisitos
+
+### Software
+
+- Java 25
+- Maven
+- Conta no GCP
+
+### Conta GCP
+
+Projeto ativo com permissões:
+
+- Storage
+- Firestore
+- Pub/Sub
+- Compute Engine
+- Cloud Functions
+- Vision API
+- Translation API
+
+---
+
+## Configuração
+
+Variáveis de ambiente:
+export GOOGLE_APPLICATION_CREDENTIALS="/caminho/key.json"
+export GCP_PROJECT_ID="cn2526-t3-g01"
+export GCP_REGION="europe-west6"
+
+
+---
+
+## Execução
+
+Ordem obrigatória:
+
+1. Workers (LabelsWorkersApp)
+2. Servidor gRPC (grpcServer)
+3. Cliente (ClientApp)
+
+---
+
+## Testes
+
+Para validar o sistema:
+
+1. Submeter imagem via cliente
+2. Confirmar criação no Cloud Storage
+3. Verificar mensagem no Pub/Sub
+4. Confirmar processamento no Firestore
+5. Consultar resultado via GetLabels
+6. Escalar e Descalar workers/servers

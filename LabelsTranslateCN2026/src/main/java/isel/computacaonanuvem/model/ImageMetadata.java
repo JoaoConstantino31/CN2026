@@ -10,9 +10,9 @@ public class ImageMetadata {
     private String blobName;
     private Date processingDate;
     private List<Map<String, Object>> labels; // Lista de labels (original, traduzida, confiança)
-    private List<String> labelsList; // Apenas as labels traduzidas para pesquisa (SF3)
+    private List<String> labelsList; // Apenas as labels traduzidas para pesquisa
 
-    // Construtor vazio necessário para o Firestore (Lab 4/5)
+    // Construtor vazio necessário para o Firestore
     public ImageMetadata() {}
 
     public ImageMetadata(String requestId, String bucketName, String blobName) {

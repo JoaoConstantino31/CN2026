@@ -63,7 +63,7 @@ Expõe dois serviços:
 | Método | Descrição |
 |--------|----------|
 | scaleWorkers | Aumenta/Diminui workers |
-| scaleServers | Diminui/Diminui servers |
+| scaleServers | Aumenta/Diminui servers |
 
 ---
 

@@ -117,9 +117,9 @@ Projeto ativo com permissões:
 ## Configuração
 
 Variáveis de ambiente:
-export GOOGLE_APPLICATION_CREDENTIALS="/caminho/key.json"
-export GCP_PROJECT_ID="cn2526-t3-g01"
-export GCP_REGION="europe-west6"
+- export GOOGLE_APPLICATION_CREDENTIALS="/caminho/key.json"
+- export GCP_PROJECT_ID="cn2526-t3-g01"
+- export GCP_REGION="europe-west6"
 
 
 ---

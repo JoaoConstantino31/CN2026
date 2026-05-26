@@ -38,8 +38,8 @@ Fluxo simplificado:
 CN2026/
 ├── ClientApp/                 # Cliente gRPC
 ├── grpcServer/                # Servidor principal
-├── LabelsTranslateCN2026/     # Serviço de tradução
-├── Proto/                     # Definições gRPC
+├── LabelsTranslateCN2026/     # Serviço de tradução e Servuço Vision
+├── Proto/                     # Contrato Proto
 └── README.md
 ```
 ---

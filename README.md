@@ -4,7 +4,7 @@
 
 Sistema para deteção e tradução de labels em imagens utilizando Google Cloud Platform (GCP).
 
-> Trabalho Final de Computação na Nuvem (ISEL, 2025/2026)
+> Trabalho Final de Computação na Nuvem (ISEL, 2025/2026) G1 T3 Francisco Lopes 49852 João Constantino 49323
 
 ---
 

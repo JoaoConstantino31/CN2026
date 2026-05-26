@@ -79,6 +79,7 @@ Expõe dois serviços:
 ### LabelsTranslateCN2026
 - Tradução de labels (EN → PT)
 - Integra Google Translation API
+- Integra Google Vision API
 ---
 
 ### Cloud Functions
